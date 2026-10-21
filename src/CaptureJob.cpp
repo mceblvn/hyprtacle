@@ -74,7 +74,7 @@ void CaptureJob::start()
         }
 
         m_screenName = monitor->name;
-        startGrim({u"-t"_s, u"png"_s, u"-o"_s, monitor->name, u"-"_s}, monitor->scale, monitor->logicalGeometry.width());
+        startGrim({u"-t"_s, u"ppm"_s, u"-o"_s, monitor->name, u"-"_s}, monitor->scale, monitor->logicalGeometry.width());
         return;
     }
     case Request::Kind::ActiveScreen: {
@@ -85,7 +85,7 @@ void CaptureJob::start()
         }
 
         m_screenName = monitor->name;
-        startGrim({u"-t"_s, u"png"_s, u"-o"_s, monitor->name, u"-"_s}, monitor->scale, monitor->logicalGeometry.width());
+        startGrim({u"-t"_s, u"ppm"_s, u"-o"_s, monitor->name, u"-"_s}, monitor->scale, monitor->logicalGeometry.width());
         return;
     }
     case Request::Kind::InteractiveScreen: {
@@ -97,7 +97,7 @@ void CaptureJob::start()
         }
 
         m_screenName = monitor->name;
-        startGrim({u"-t"_s, u"png"_s, u"-o"_s, monitor->name, u"-"_s}, monitor->scale, monitor->logicalGeometry.width());
+        startGrim({u"-t"_s, u"ppm"_s, u"-o"_s, monitor->name, u"-"_s}, monitor->scale, monitor->logicalGeometry.width());
         return;
     }
     case Request::Kind::Area: {
@@ -111,7 +111,7 @@ void CaptureJob::start()
                                   .arg(m_request.area.y())
                                   .arg(m_request.area.width())
                                   .arg(m_request.area.height());
-        startGrim({u"-t"_s, u"png"_s, u"-g"_s, geometry, u"-"_s}, 0.0, m_request.area.width());
+        startGrim({u"-t"_s, u"ppm"_s, u"-g"_s, geometry, u"-"_s}, 0.0, m_request.area.width());
         return;
     }
     case Request::Kind::ActiveWindow: {
@@ -130,7 +130,7 @@ void CaptureJob::start()
                                   .arg(window->geometry.y())
                                   .arg(window->geometry.width())
                                   .arg(window->geometry.height());
-        startGrim({u"-t"_s, u"png"_s, u"-g"_s, geometry, u"-"_s}, 0.0, window->geometry.width());
+        startGrim({u"-t"_s, u"ppm"_s, u"-g"_s, geometry, u"-"_s}, 0.0, window->geometry.width());
         return;
     }
     case Request::Kind::InteractiveWindow: {
@@ -154,7 +154,7 @@ void CaptureJob::start()
                                   .arg(window->geometry.y())
                                   .arg(window->geometry.width())
                                   .arg(window->geometry.height());
-        startGrim({u"-t"_s, u"png"_s, u"-g"_s, geometry, u"-"_s}, 0.0, window->geometry.width());
+        startGrim({u"-t"_s, u"ppm"_s, u"-g"_s, geometry, u"-"_s}, 0.0, window->geometry.width());
         return;
     }
     }
@@ -214,7 +214,7 @@ void CaptureJob::onProcessFinished()
 
     const auto data = m_process->readAllStandardOutput();
     QImage image;
-    if (!image.loadFromData(data, "PNG")) {
+    if (!image.loadFromData(data, "PPM")) {
         fail(s_errorFailed, u"Failed to decode the screenshot"_s);
         return;
     }
