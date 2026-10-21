@@ -1,0 +1,13 @@
+[Unit]
+Description=Hyprtacle screenshot service for Hyprland
+Documentation=https://github.com/hyprtacle/hyprtacle
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=@CMAKE_INSTALL_FULL_BINDIR@/hyprtacled
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=graphical-session.target
