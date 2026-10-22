@@ -22,9 +22,9 @@ Region selection and annotations are Spectacle's own code (`SelectionEditor`,
 
 ## Requirements
 
-| | |
+| Requirement | Purpose |
 |---|---|
-| Hyprland | compositor |
+| Hyprland | the compositor |
 | `grim` | capture, `zwlr_screencopy_manager_v1` |
 | `hyprctl` | monitor and window geometry |
 | Qt 6.5+, CMake 3.16+, C++20 | build |
@@ -84,12 +84,12 @@ is already taken (real KWin).
 ## Verify
 
 ```sh
-hyprtacled --check                                 # environment report
-hyprtacle-capture screen out.png                 # by monitor name
-hyprtacle-capture active out.png                 # focused monitor
-hyprtacle-capture window out.png                 # active window
-hyprtacle-capture area out.png "10,10 300x200"   # rectangle
-spectacle -r                                     # region + annotations
+hyprtacled --check                                # environment report
+hyprtacle-capture screen out.png                  # by monitor name
+hyprtacle-capture active out.png                  # focused monitor
+hyprtacle-capture window out.png                  # active window
+hyprtacle-capture area out.png "10,10 300x200"    # rectangle
+spectacle -r                                      # region + annotations
 ```
 
 ## Interface
