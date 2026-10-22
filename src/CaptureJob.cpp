@@ -41,6 +41,14 @@ CaptureJob::CaptureJob(QDBusMessage replyMessage, int fileDescriptor, Request re
 {
 }
 
+CaptureJob::~CaptureJob()
+{
+    if (m_fileDescriptor != -1) {
+        ::close(m_fileDescriptor);
+        m_fileDescriptor = -1;
+    }
+}
+
 void CaptureJob::start()
 {
     switch (m_request.kind) {
@@ -206,19 +214,26 @@ void CaptureJob::startGrim(const QStringList &arguments, qreal expectedScale, qr
 
 void CaptureJob::onProcessError()
 {
+    if (m_finished) {
+        return;
+    }
     fail(s_errorFailed, u"Failed to run grim: "_s + m_process->errorString());
 }
 
 void CaptureJob::onTimeout()
 {
-    if (m_process && m_process->state() != QProcess::NotRunning) {
-        m_process->kill();
+    if (m_finished) {
+        return;
     }
     fail(s_errorFailed, u"Timed out while taking the screenshot"_s);
 }
 
 void CaptureJob::onProcessFinished()
 {
+    if (m_finished) {
+        return;
+    }
+
     m_timeout->stop();
 
     if (m_process->exitStatus() != QProcess::NormalExit || m_process->exitCode() != 0) {
@@ -247,8 +262,33 @@ void CaptureJob::onProcessFinished()
     succeed(image, m_screenName);
 }
 
+bool CaptureJob::beginFinish()
+{
+    if (m_finished) {
+        return false;
+    }
+    m_finished = true;
+
+    if (m_timeout) {
+        m_timeout->stop();
+    }
+
+    if (m_process) {
+        m_process->disconnect(this);
+        if (m_process->state() != QProcess::NotRunning) {
+            m_process->kill();
+        }
+    }
+
+    return true;
+}
+
 void CaptureJob::fail(const QString &errorName, const QString &errorMessage)
 {
+    if (!beginFinish()) {
+        return;
+    }
+
     qCWarning(lcHyprtacle) << "Screenshot request failed:" << errorMessage;
 
     if (m_fileDescriptor != -1) {
@@ -257,10 +297,15 @@ void CaptureJob::fail(const QString &errorName, const QString &errorMessage)
     }
 
     QDBusConnection::sessionBus().send(m_replyMessage.createErrorReply(errorName, errorMessage));
+    deleteLater();
 }
 
 void CaptureJob::succeed(const QImage &image, const QString &screenName)
 {
+    if (!beginFinish()) {
+        return;
+    }
+
     QVariantMap results;
     results.insert(u"type"_s, u"raw"_s);
     results.insert(u"format"_s, static_cast<quint32>(image.format()));
@@ -281,4 +326,6 @@ void CaptureJob::succeed(const QImage &image, const QString &screenName)
     auto *writer = new PipeWriter(m_fileDescriptor, QByteArray(reinterpret_cast<const char *>(image.constBits()), image.sizeInBytes()));
     m_fileDescriptor = -1;
     QThreadPool::globalInstance()->start(writer);
+
+    deleteLater();
 }

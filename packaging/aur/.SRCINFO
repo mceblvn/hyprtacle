@@ -3,6 +3,7 @@ pkgbase = hyprtacle
 	pkgver = 0.1.0
 	pkgrel = 1
 	url = https://github.com/mceblvn/hyprtacle
+	install = hyprtacle.install
 	arch = x86_64
 	license = BSD-3-Clause
 	license = LGPL-3.0-only
@@ -13,9 +14,7 @@ pkgbase = hyprtacle
 	depends = qt6-base
 	optdepends = hyprland: the compositor this service is for
 	optdepends = spectacle: the client this service is made for
-	source = git+https://github.com/mceblvn/hyprtacle.git
-	source = git+https://github.com/mceblvn/hyprtacle.git#tag=v0.1.0
-	sha256sums = SKIP
-	sha256sums = SKIP
+	source = hyprtacle-0.1.0.tar.gz::https://github.com/mceblvn/hyprtacle/archive/refs/tags/v0.1.0.tar.gz
+	sha256sums = bfb610b24e585c6994199e0979cdc10def1b4554b640be64e0fa864402a17c3e
 
 pkgname = hyprtacle

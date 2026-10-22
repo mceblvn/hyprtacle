@@ -1,0 +1,5 @@
+post_install() {
+    echo "The service has to run before Spectacle starts:"
+    echo "  systemctl --user enable --now hyprtacled.service"
+    echo "Check the environment with: hyprtacled --check"
+}

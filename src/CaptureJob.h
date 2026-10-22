@@ -41,6 +41,7 @@ public:
     };
 
     CaptureJob(QDBusMessage replyMessage, int fileDescriptor, Request request, QObject *parent = nullptr);
+    ~CaptureJob() override;
 
     /**
      * Starts the capture. The job sends exactly one reply, either a result
@@ -54,12 +55,14 @@ private:
     void onProcessError();
     void onTimeout();
 
+    bool beginFinish();
     void fail(const QString &errorName, const QString &errorMessage);
     void succeed(const QImage &image, const QString &screenName);
 
     QDBusMessage m_replyMessage;
     int m_fileDescriptor = -1;
     Request m_request;
+    bool m_finished = false;
 
     class QProcess *m_process = nullptr;
     class QTimer *m_timeout = nullptr;

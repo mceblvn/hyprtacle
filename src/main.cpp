@@ -178,8 +178,13 @@ int main(int argc, char **argv)
     if (::pipe(s_signalPipe) == -1) {
         qCWarning(lcHyprtacle) << "Failed to create the signal pipe";
     } else {
+        const int writeFlags = ::fcntl(s_signalPipe[1], F_GETFL, 0);
+        if (writeFlags != -1) {
+            ::fcntl(s_signalPipe[1], F_SETFL, writeFlags | O_NONBLOCK);
+        }
+
         auto *notifier = new QSocketNotifier(s_signalPipe[0], QSocketNotifier::Read, &application);
-        QObject::connect(notifier, &QSocketNotifier::activated, &application, [&notifier] {
+        QObject::connect(notifier, &QSocketNotifier::activated, &application, [notifier] {
             notifier->setEnabled(false);
             char byte = 0;
             const ssize_t ignored = ::read(s_signalPipe[0], &byte, 1);
