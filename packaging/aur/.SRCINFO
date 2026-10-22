@@ -1,0 +1,21 @@
+pkgbase = hyprtacle
+	pkgdesc = KWin-compatible screenshot service for Hyprland — lets stock Spectacle take screenshots
+	pkgver = 0.1.0
+	pkgrel = 1
+	url = https://github.com/mceblvn/hyprtacle
+	arch = x86_64
+	license = BSD-3-Clause
+	license = LGPL-3.0-only
+	makedepends = cmake
+	makedepends = ninja
+	makedepends = pkgconf
+	depends = grim
+	depends = qt6-base
+	optdepends = hyprland: the compositor this service is for
+	optdepends = spectacle: the client this service is made for
+	source = git+https://github.com/mceblvn/hyprtacle.git
+	source = git+https://github.com/mceblvn/hyprtacle.git#tag=v0.1.0
+	sha256sums = SKIP
+	sha256sums = SKIP
+
+pkgname = hyprtacle
