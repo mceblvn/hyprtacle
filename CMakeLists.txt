@@ -67,8 +67,15 @@ configure_file(
     ${CMAKE_CURRENT_BINARY_DIR}/hyprtacled.service
     @ONLY
 )
+# systemd looks for user units in $XDG_DATA_HOME/systemd/user (share) and
+# /usr/lib/systemd/user (lib) — not in /usr/share/systemd/user.
+if(CMAKE_INSTALL_PREFIX MATCHES "^/usr(/local)?$")
+    set(HYPRTACLE_SYSTEMD_USER_UNIT_DIR "${CMAKE_INSTALL_LIBDIR}/systemd/user")
+else()
+    set(HYPRTACLE_SYSTEMD_USER_UNIT_DIR "${CMAKE_INSTALL_DATADIR}/systemd/user")
+endif()
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/hyprtacled.service
-    DESTINATION ${CMAKE_INSTALL_DATADIR}/systemd/user
+    DESTINATION ${HYPRTACLE_SYSTEMD_USER_UNIT_DIR}
 )
 
 # A D-Bus client that talks to the service exactly like Spectacle does.

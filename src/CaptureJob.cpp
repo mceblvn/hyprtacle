@@ -52,17 +52,32 @@ void CaptureJob::start()
         }
 
         std::optional<HyprlandMonitor> monitor;
-        for (const auto &candidate : *all) {
-            if (candidate.name == m_request.screenName) {
-                monitor = candidate;
-                break;
+        if (m_request.screenName.isEmpty()) {
+            // Spectacle can ask with an empty name: QScreen::name() is not
+            // known yet when it builds the request. Take the focused output,
+            // else the first one.
+            for (const auto &candidate : *all) {
+                if (candidate.focused) {
+                    monitor = candidate;
+                    break;
+                }
             }
-        }
-        if (!monitor && all->size() == 1) {
-            // The client asked for a name we do not know, but there is only one
-            // output, so there is no ambiguity.
-            monitor = all->constFirst();
-            qCWarning(lcHyprtacle) << "Unknown screen" << m_request.screenName << "- using" << monitor->name << "instead";
+            if (!monitor) {
+                monitor = all->constFirst();
+            }
+        } else {
+            for (const auto &candidate : *all) {
+                if (candidate.name == m_request.screenName) {
+                    monitor = candidate;
+                    break;
+                }
+            }
+            if (!monitor && all->size() == 1) {
+                // The client asked for a name we do not know, but there is only one
+                // output, so there is no ambiguity.
+                monitor = all->constFirst();
+                qCWarning(lcHyprtacle) << "Unknown screen" << m_request.screenName << "- using" << monitor->name << "instead";
+            }
         }
         if (!monitor) {
             fail(s_errorInvalidScreen, u"Invalid screen requested: "_s + m_request.screenName);

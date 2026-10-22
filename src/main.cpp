@@ -12,6 +12,7 @@
 #include <QTextStream>
 #include <QCoreApplication>
 #include <QDBusConnection>
+#include <QDBusConnectionInterface>
 #include <QLoggingCategory>
 #include <QSocketNotifier>
 #include <QStandardPaths>
@@ -26,6 +27,59 @@ namespace
 {
 const auto s_serviceName = u"org.kde.KWin.ScreenShot2"_s;
 const auto s_objectPath = u"/org/kde/KWin/ScreenShot2"_s;
+
+/**
+ * Prints what the service needs to work and what is missing. Exit code is
+ * zero when everything a capture needs is in place.
+ */
+int runCheck()
+{
+    QTextStream out(stdout);
+    bool ok = true;
+
+    const auto report = [&out, &ok](const QString &what, bool good, const QString &detail = {}) {
+        out << (good ? "  ok    " : "  FAIL  ") << what;
+        if (!detail.isEmpty()) {
+            out << " — " << detail;
+        }
+        out << Qt::endl;
+        ok = ok && good;
+    };
+
+    out << "hyprtacled " << QCoreApplication::applicationVersion() << Qt::endl;
+
+    const auto grim = QStandardPaths::findExecutable(QStringLiteral("grim"));
+    report(QStringLiteral("grim"), !grim.isEmpty(), grim.isEmpty() ? QStringLiteral("not in PATH") : grim);
+
+    const auto waylandDisplay = qEnvironmentVariable("WAYLAND_DISPLAY");
+    report(QStringLiteral("WAYLAND_DISPLAY"), !waylandDisplay.isEmpty(), waylandDisplay);
+
+    report(QStringLiteral("Hyprland session"), HyprlandInfo::isHyprlandSession(),
+           qEnvironmentVariable("HYPRLAND_INSTANCE_SIGNATURE").isEmpty() ? QStringLiteral("HYPRLAND_INSTANCE_SIGNATURE is not set")
+                                                                       : QString());
+
+    const auto monitors = HyprlandInfo::monitors();
+    report(QStringLiteral("hyprctl monitors"), monitors.has_value());
+    if (monitors) {
+        for (const auto &monitor : *monitors) {
+            out << "          " << monitor.name << "  " << monitor.logicalGeometry.width() << 'x' << monitor.logicalGeometry.height()
+                << "  scale " << monitor.scale << (monitor.focused ? "  (focused)" : "") << Qt::endl;
+        }
+    }
+
+    auto connection = QDBusConnection::sessionBus();
+    const bool registered = connection.interface()->isServiceRegistered(s_serviceName);
+    if (registered) {
+        const auto pid = connection.interface()->servicePid(s_serviceName);
+        report(QStringLiteral("D-Bus service"), true, QStringLiteral("owned by pid %1").arg(pid.value()));
+    } else {
+        report(QStringLiteral("D-Bus service"), false,
+               QStringLiteral("%1 is not registered — Spectacle cannot capture").arg(s_serviceName));
+    }
+
+    out << (ok ? QStringLiteral("Everything is in place.") : QStringLiteral("Something is missing.")) << Qt::endl;
+    return ok ? 0 : 1;
+}
 
 // The default Qt message handler does not print anything in some builds, so
 // we install our own and write to standard error.
@@ -99,7 +153,14 @@ int main(int argc, char **argv)
                                           QStringLiteral("Run even when the session does not look like a Hyprland session."));
     parser.addOption(forceOption);
 
+    const QCommandLineOption checkOption({u"check"_s}, QStringLiteral("Check the environment and exit."));
+    parser.addOption(checkOption);
+
     parser.process(application);
+
+    if (parser.isSet(checkOption)) {
+        return runCheck();
+    }
 
     if (parser.isSet(verboseOption)) {
         QLoggingCategory::setFilterRules(QStringLiteral("hyprtacle=true\nhyprtacle.debug=true"));

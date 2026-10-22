@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 hyprtacle contributors
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 [Unit]
 Description=Hyprtacle screenshot service for Hyprland
 Documentation=https://github.com/hyprtacle/hyprtacle
@@ -5,7 +9,10 @@ After=graphical-session.target
 
 [Service]
 Type=simple
-ExecStart=@CMAKE_INSTALL_FULL_BINDIR@/hyprtacled
+# The user manager does not always have WAYLAND_DISPLAY in its environment,
+# so look for the socket in the runtime directory when it is missing.
+Environment=XDG_RUNTIME_DIR=%t
+ExecStart=/bin/sh -c 'if [ -z "$WAYLAND_DISPLAY" ]; then for s in "$XDG_RUNTIME_DIR"/wayland-*; do if [ -S "$s" ]; then WAYLAND_DISPLAY="$(basename "$s")"; export WAYLAND_DISPLAY; break; fi; done; fi; exec "@CMAKE_INSTALL_FULL_BINDIR@/hyprtacled"'
 Restart=on-failure
 RestartSec=2
 
