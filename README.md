@@ -7,19 +7,18 @@
 # hyprtacle
 
 D-Bus service that speaks the `org.kde.KWin.ScreenShot2` interface on Hyprland.
-Lets unmodified Spectacle take screenshots: rectangular region with annotations,
-fullscreen, active window.
+Allows Spectacle to take screenshots. Workflow is not changed.
+
+![Spectacle region capture with annotations on Hyprland](demo.png)
 
 ## Why
 
 Spectacle captures on Wayland through KWin only: `ScreenShotEffect::isLoaded()`
-checks whether `org.kde.KWin.ScreenShot2` is registered on the session bus, and
-if it is not, Spectacle falls back to `ImagePlatformNull` and exits silently —
-no error, no file, no message.
+checks whether `org.kde.KWin.ScreenShot2` is registered on the session bus.
+Without it Spectacle falls back to `ImagePlatformNull` and exits silently.
 
-Region selection and annotations are *not* KWin's job: they are Spectacle's
-(`SelectionEditor`, `CaptureOverlay.qml`, KQuickImageEditor). Only the capture
-backend is missing. This service provides it.
+Region selection and annotations are Spectacle's own code (`SelectionEditor`,
+`CaptureOverlay.qml`, KQuickImageEditor). Only the capture backend is missing.
 
 ## Requirements
 
@@ -52,8 +51,7 @@ Installed:
 With a `/usr` prefix the unit goes to `/usr/lib/systemd/user` — systemd does
 not look in `/usr/share/systemd/user`.
 
-Arch: `packaging/aur/PKGBUILD` is ready to submit (AUR registration is
-closed at the moment, so build from source or take the package file as is).
+Arch: `packaging/aur/PKGBUILD`.
 
 ## Start
 
@@ -62,16 +60,23 @@ The daemon has to run **before** the client: Spectacle calls
 
 ```sh
 systemctl --user enable --now hyprtacled.service
+journalctl --user -u hyprtacled.service
 ```
 
-or from the Hyprland config:
+or from the Hyprland config (Lua, Hyprland 0.56+):
+
+```lua
+hl.exec_cmd("pgrep -x hyprtacled >/dev/null 2>&1 || exec $HOME/.local/bin/hyprtacled")
+```
+
+Older Hyprland, hyprlang syntax:
 
 ```conf
 exec-once = pgrep -x hyprtacled >/dev/null 2>&1 || exec hyprtacled
 ```
 
-The systemd unit needs `WAYLAND_DISPLAY` in the user manager environment; the
-unit locates the socket in `$XDG_RUNTIME_DIR` if the variable is missing.
+The unit looks for the wayland socket in `$XDG_RUNTIME_DIR` when the user
+manager has no `WAYLAND_DISPLAY`.
 
 The daemon exits with code 0 if the session is not Hyprland, or if the bus name
 is already taken (real KWin).
@@ -80,9 +85,6 @@ is already taken (real KWin).
 
 ```sh
 hyprtacled --check                                 # environment report
-```
-
-```sh
 hyprtacle-capture screen out.png                 # by monitor name
 hyprtacle-capture active out.png                 # focused monitor
 hyprtacle-capture window out.png                 # active window
@@ -125,18 +127,16 @@ screen  string, output name, monitors only
 
 Exactly `width * height * 4` bytes follow, tightly packed, in the format above.
 
-**Ordering.** The reply goes out first, the pixels go into the pipe afterwards,
-from a separate thread (`O_NONBLOCK` + `poll`, 60 s timeout). The client only
-starts reading the pipe after it received the reply, and a pipe holds 64 KiB —
-less than one screenshot. Writing the data first deadlocks both sides.
+The reply goes out first, the pixels go into the pipe afterwards, from a
+separate thread (`O_NONBLOCK` + `poll`, 60 s timeout). The client only starts
+reading the pipe after it received the reply, and a pipe holds 64 KiB — less
+than one screenshot. Writing the data first deadlocks both sides.
 
 `SIGPIPE` is ignored: a client that walks away mid-transfer must not take the
 service down.
 
-**Transport.** grim is asked for PPM, not PNG: encoding 3.7 Mpixel as PNG
-costs ~0.5 s, PPM ~0.015 s. The service decodes the stream to a QImage right
-away, so the transport format never reaches the client — it always gets
-32 bit pixels.
+grim is asked for PPM. The stream is decoded to a QImage right away, so the
+client always gets 32 bit pixels.
 
 ## Layout
 
