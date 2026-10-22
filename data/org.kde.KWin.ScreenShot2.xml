@@ -1,9 +1,14 @@
 <!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
 "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
 <!--
+    Copied verbatim from KWin (src/plugins/screenshot/org.kde.KWin.ScreenShot2.xml),
+    so that the D-Bus introspection matches the interface stock Spectacle
+    expects. Upstream offers LGPL-2.1-only OR LGPL-3.0-only OR
+    LicenseRef-KDE-Accepted-LGPL; this copy is distributed under LGPL-3.0-only.
+
     SPDX-FileCopyrightText: 2021 Vlad Zahorodnii <vlad.zahorodnii@kde.org>
 
-    SPDX-License-Identifier: LGPL-2.1-only OR LGPL-3.0-only OR LicenseRef-KDE-Accepted-LGPL
+    SPDX-License-Identifier: LGPL-3.0-only
 -->
 <node name="/org/kde/KWin/ScreenShot2">
     <!--

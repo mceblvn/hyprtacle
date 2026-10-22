@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 hyprtacle contributors
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 [D-BUS Service]
 Name=org.kde.KWin.ScreenShot2
 Exec=@CMAKE_INSTALL_FULL_BINDIR@/hyprtacled
